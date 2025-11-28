@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-SecBuddy - Log Reader (Phase 1)
+SecBuddy - Log Reader (Phase 4)
 Author: Yash Sharma
 
-Reads Linux auth.log and finds failed SSH login attempts.
+Integrated version:
+✔ Reads auth.log
+✔ Detects failed SSH attempts
+✔ Groups attempts per IP
+✔ Feeds to analyzer & recommender
+✔ Prints full security report
 """
 
 import re
@@ -11,12 +16,12 @@ from collections import defaultdict
 from pathlib import Path
 from datetime import datetime
 
+from .analyzer import analyze_ip
+from .recommender import format_recommendation_output
 
-# Default path for auth log in most Linux systems
+
 DEFAULT_AUTH_LOG = "/var/log/auth.log"
 
-
-# Regex pattern to capture failed SSH attempts
 FAILED_SSH_PATTERN = re.compile(
     r"(?P<month>\w{3})\s+(?P<day>\d+)\s+(?P<time>\d{2}:\d{2}:\d{2})\s+"
     r"(?P<host>\S+)\s+sshd\[\d+\]:\s+Failed password for "
@@ -24,15 +29,11 @@ FAILED_SSH_PATTERN = re.compile(
 )
 
 
-def parse_failed_ssh_lines(log_path: str = DEFAULT_AUTH_LOG):
-    """
-    Generator that yields info about each failed SSH login attempt.
-    """
+def parse_failed_ssh(log_path=DEFAULT_AUTH_LOG):
     log_file = Path(log_path)
 
     if not log_file.exists():
         print(f"[ERROR] Log file not found: {log_path}")
-        print("Make sure you're running this on a Linux system with /var/log/auth.log")
         return
 
     with log_file.open("r", encoding="utf-8", errors="ignore") as f:
@@ -41,56 +42,46 @@ def parse_failed_ssh_lines(log_path: str = DEFAULT_AUTH_LOG):
             if match:
                 data = match.groupdict()
                 yield {
-                    "timestamp": _build_timestamp(data["month"], data["day"], data["time"]),
-                    "host": data["host"],
-                    "user": data["user"],
                     "ip": data["ip"],
-                    "raw": line.strip(),
+                    "user": data["user"],
+                    "raw": line.strip()
                 }
 
 
-def _build_timestamp(month: str, day: str, time_str: str) -> str:
-    """
-    Build a readable timestamp string from log parts.
-    Year is assumed as current year.
-    """
-    current_year = datetime.now().year
-    ts_str = f"{month} {day} {current_year} {time_str}"
-    try:
-        dt = datetime.strptime(ts_str, "%b %d %Y %H:%M:%S")
-        return dt.isoformat(sep=" ")
-    except ValueError:
-        return ts_str  # Fallback
+def build_failed_attempt_summary(log_path=DEFAULT_AUTH_LOG):
+    attempts = defaultdict(int)
+    last_user_for_ip = {}
+
+    for event in parse_failed_ssh(log_path):
+        ip = event["ip"]
+        user = event["user"]
+        attempts[ip] += 1
+        last_user_for_ip[ip] = user
+
+    return attempts, last_user_for_ip
 
 
-def summarize_failed_attempts(log_path: str = DEFAULT_AUTH_LOG, min_threshold: int = 3):
-    """
-    Summarize failed SSH attempts per IP and print suspicious IPs
-    (those with attempts >= min_threshold).
-    """
-    attempts_per_ip = defaultdict(int)
+def generate_report():
+    attempts, last_user = build_failed_attempt_summary()
 
-    print(f"[INFO] Reading failed SSH logins from: {log_path}")
-
-    for event in parse_failed_ssh_lines(log_path):
-        attempts_per_ip[event["ip"]] += 1
-
-    if not attempts_per_ip:
-        print("[INFO] No failed SSH login attempts found.")
+    if not attempts:
+        print("[INFO] No failed SSH attempts detected.")
         return
 
-    print("\n=== Failed SSH Attempts Per IP ===")
-    for ip, count in sorted(attempts_per_ip.items(), key=lambda x: x[1], reverse=True):
-        status = "SUSPICIOUS" if count >= min_threshold else "OK"
-        print(f"{ip:15} -> {count:3d} attempts   [{status}]")
+    print("\n===== SecBuddy SSH Security Report =====\n")
 
-    print("\n[INFO] Marking IPs with attempts >= "
-          f"{min_threshold} as suspicious.")
+    for ip, count in sorted(attempts.items(), key=lambda x: x[1], reverse=True):
+        user = last_user.get(ip, "unknown")
+
+        analysis = analyze_ip(ip, count, user)
+        report = format_recommendation_output(analysis)
+
+        print(report)
+        print("\n----------------------------------------\n")
 
 
 def main():
-    # For Phase 1, just run the summary
-    summarize_failed_attempts()
+    generate_report()
 
 
 if __name__ == "__main__":
