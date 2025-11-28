@@ -1,0 +1,17 @@
+# Step 1: Go to your project folder (path change if needed)
+cd ~/SecBuddy
+
+# Step 2: Create virtual environment
+python3 -m venv venv
+
+# Step 3: Activate virtual environment
+source venv/bin/activate
+
+# Step 4: Install requirements (if file exists)
+pip install -r requirements.txt
+
+# Step 5: Run short summary (failed attempts per IP)
+python3 -m secbuddy.cli summary
+
+# Step 6: Run full detailed report (risk + explanation + actions)
+python3 -m secbuddy.cli scan-auth
