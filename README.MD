@@ -93,7 +93,7 @@ SecBuddy/
 ## 🧪 Installation
 
 ```
-git clone https://github.com/YOUR-USERNAME/SecBuddy.git
+git clone https://github.com/mryasharma/SecBuddy.git
 cd SecBuddy
 pip install -r requirements.txt
 ```
