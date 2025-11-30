@@ -60,22 +60,33 @@ def build_failed_attempt_summary(log_path=DEFAULT_AUTH_LOG):
 
     return attempts, last_user_for_ip
 
+def get_ip_analysis(log_path=DEFAULT_AUTH_LOG):
+    """
+    Build a list of analysis dicts for each attacking IP.
+    Useful for exporting or sending via email.
+    """
+    attempts, last_user = build_failed_attempt_summary(log_path)
+
+    analyses = []
+    for ip, count in sorted(attempts.items(), key=lambda x: x[1], reverse=True):
+        user = last_user.get(ip, "unknown")
+        analysis = analyze_ip(ip, count, user)
+        analyses.append(analysis)
+
+    return analyses
+
 
 def generate_report():
-    attempts, last_user = build_failed_attempt_summary()
+    analyses = get_ip_analysis()
 
-    if not attempts:
+    if not analyses:
         print("[INFO] No failed SSH attempts detected.")
         return
 
     print("\n===== SecBuddy SSH Security Report =====\n")
 
-    for ip, count in sorted(attempts.items(), key=lambda x: x[1], reverse=True):
-        user = last_user.get(ip, "unknown")
-
-        analysis = analyze_ip(ip, count, user)
+    for analysis in analyses:
         report = format_recommendation_output(analysis)
-
         print(report)
         print("\n----------------------------------------\n")
 

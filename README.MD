@@ -1,178 +1,134 @@
 # 🛡️ SecBuddy — Linux Security Log Intelligence Assistant
 
-SecBuddy is a lightweight yet powerful **Linux security assistant** that analyzes SSH authentication logs, detects suspicious login activity, scores the risk, and suggests clear, actionable security steps.
+SecBuddy is a lightweight yet powerful **Linux security assistant** designed to analyze system logs, detect suspicious activity, and explain events in **simple human-readable language**.
 
-It is built to help:
-- Linux learners
-- Cyber security students
-- System administrators
-- Anyone who wants to understand what's happening in `/var/log/auth.log`
+Unlike traditional log analyzers, SecBuddy focuses on **clarity, real-time detection, and actionable security recommendations**.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
-### 🔍 SSH Failed Login Detection
-- Parses `/var/log/auth.log`
-- Detects failed SSH login attempts
-- Groups attempts by source IP
-- Tracks which user was targeted (`root`, normal users, invalid users, etc.)
+### 🔍 Log Monitoring
+Monitors:
+- `/var/log/auth.log`
+- `/var/log/syslog`
+- SSH activity
+- Failed logins
+- Sudo usage
+- Unknown users attempting access
 
-### 🧠 Risk-Based Analysis
-For each attacking IP, SecBuddy:
-- Counts total failed attempts
-- Checks if `root` account was targeted
-- Computes a **risk score (0–10)**
-- Detects brute-force–like patterns
+### 🧠 Intelligent Analysis
+- Detects brute-force attacks  
+- Suspicious login patterns  
+- Abnormal sudo usage  
+- User behavior deviation  
 
-Example:
+### 💬 Human-Readable Explanation
+SecBuddy converts complex logs into simple explanations like:
 
-```text
-IP:           45.67.89.10
-User:         root
-Attempts:     51
-Risk score:   10/10
+```
+[ALERT] 45.12.34.56 attempted 12 failed SSH logins in 3 minutes.
+Explanation: This behavior resembles a brute-force attack.
+Recommended Action: Block this IP immediately.
+```
 
-Explanation:
-  IP 45.67.89.10 attempted 51 failed logins – this strongly resembles a brute-force attack.
-  Targeting the 'root' account is very dangerous.
+### ⚠️ Risk Scoring
+Each event gets a **risk score (0–10)**.
 
-Recommended actions:
-  1. Immediately block IP using firewall (ufw/iptables).
-  2. Enforce SSH key-based authentication instead of password logins.
-  3. Disable direct root SSH login (set 'PermitRootLogin no' in sshd_config).
-  4. Review SSH logs regularly for similar patterns.
-  5. Consider changing the SSH port to a non-default one.
-  6. Ensure all user accounts use strong, unique passwords.
-💬 Human-Readable Explanations
-SecBuddy doesn’t just show log lines —
-it explains what’s happening in simple language and marks IPs as:
+### 🛠️ Recommendations Engine
+Provides actionable suggestions:
+- Block IP  
+- Disable root login  
+- Enforce SSH key authentication  
+- Change SSH port  
 
-Normal / Monitoring
+### 📊 System Summary
+Daily summary of:
+- Successful logins  
+- Failed logins  
+- Suspicious IPs  
+- High-risk events  
 
-Unusual
+---
 
-Suspicious
+## 🧩 Project Goals
 
-High-Risk (Brute-force)
+SecBuddy is built for:
 
-📊 JSON / CSV Export
-You can export a full analysis report for all attacking IPs:
+- Linux learners  
+- Security enthusiasts  
+- System administrators  
+- Anyone who wants a smart local security assistant  
 
-bash
-Copy code
-python3 -m secbuddy.cli export          # export JSON + CSV
-python3 -m secbuddy.cli export --json   # JSON only
-python3 -m secbuddy.cli export --csv    # CSV only
-This creates:
+---
 
-text
-Copy code
-exports/secbuddy_report.json
-exports/secbuddy_report.csv
-which can be used for:
+## 📁 Folder Structure
 
-Reporting
-
-Forensics
-
-Assignments / project documentation
-
-Feeding into other tools
-
-📧 (Optional) Email Report
-SecBuddy can also send a summary report via email using SMTP:
-
-bash
-Copy code
-python3 -m secbuddy.cli email-report \
-  --smtp smtp.gmail.com \
-  --user "your-email@example.com" \
-  --to "recipient@example.com"
-Note: For Gmail, you should use an app password, not your main login password.
-
-🧩 Project Structure
-text
-Copy code
+```
 SecBuddy/
 ├── secbuddy/
-│   ├── __init__.py
-│   ├── log_reader.py        # Reads auth.log and builds attack summary
-│   ├── analyzer.py          # Risk scoring + explanations
-│   ├── recommender.py       # Security action suggestions
-│   ├── cli.py               # Command-line interface
-│   ├── exporter.py          # JSON / CSV export
-│   └── email_notifier.py    # Email summary (optional)
-├── exports/                 # Generated reports (ignored by Git, usually)
+│   ├── log_reader.py
+│   ├── analyzer.py
+│   ├── recommender.py
+│   ├── monitor.py
+│   ├── cli.py
+│
+├── docs/
+│   └── architecture.md
+│
+├── examples/
+│   └── sample_output.png
+│
+├── tests/
+│   └── test_basic.py
+│
+├── LICENSE
 ├── README.md
 ├── LICENSE
 └── requirements.txt
-⚙️ Installation (Linux / WSL Ubuntu)
-bash
-Copy code
-# Go to your project folder
-cd /mnt/c/Users/Yash/Desktop/SecBuddy   # or your path
+```
 
-# (Optional) Install pip if not installed
-sudo apt update
-sudo apt install -y python3-pip
+---
 
-# Install Python dependencies
+## 🧪 Installation
+
+```
+git clone https://github.com/YOUR-USERNAME/SecBuddy.git
+cd SecBuddy
 pip install -r requirements.txt
-▶️ Usage
-1️⃣ Summary of failed SSH attempts
-bash
-Copy code
-python3 -m secbuddy.cli summary
-Shows:
+```
 
-Each attacking IP
+---
 
-Number of failed attempts
+## ▶️ Usage
 
-Totals
+Start the CLI assistant:
 
-2️⃣ Full detailed report (with risk & actions)
-bash
-Copy code
-python3 -m secbuddy.cli scan-auth
-Shows, for each IP:
+```
+python -m secbuddy.cli
+```
 
-Attempts
+Example commands:
+```
+scan-auth
+scan-sudo
+show-summary
+explain-last 20
+monitor-live
+```
 
-Targeted user
+---
 
-Risk score
+## 📜 License
 
-Explanation
+Licensed under the **Apache License 2.0**.  
+This project retains the copyright:
 
-Recommended actions (firewall, SSH config, monitoring, etc.)
+**(c) 2025 Yash Sharma**
 
-3️⃣ Export reports
-bash
-Copy code
-python3 -m secbuddy.cli export          # JSON + CSV
-python3 -m secbuddy.cli export --json   # JSON only
-python3 -m secbuddy.cli export --csv    # CSV only
-🧪 Simulating Attacks (for Demo / Testing)
-To simulate a brute-force attack in a test environment (WSL / lab machine):
+---
 
-bash
-Copy code
-sudo bash -c 'for i in {1..50}; do echo "Jan 20 12:45:00 yash sshd[1234]: Failed password for invalid user root from 45.67.89.10 port 5432 ssh2" >> /var/log/auth.log; done'
+## 👨‍💻 Author
 
-python3 -m secbuddy.cli scan-auth
-You will see a high-risk report for IP 45.67.89.10.
-
-⚠ Use this only on your own lab machine / WSL. Never tamper with production logs.
-
-📝 License
-This project is licensed under the Apache License 2.0.
-See the LICENSE file for details.
-
-Copyright (c) 2025 Yash Sharma
-
-👨‍💻 Author
-Yash Sharma
-Creator & Maintainer — SecBuddy
-GitHub: @mryasharma
+**Yash Sharma**  
+Creator & Maintainer of SecBuddy  

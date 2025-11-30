@@ -1,0 +1,9 @@
+# Python virtual environment and build artifacts
+venv/
+deb_build/
+pkg/
+exports/
+__pycache__/
+*.pyc
+*.log
+*.deb
