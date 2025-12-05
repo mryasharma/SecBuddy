@@ -93,6 +93,18 @@ SecBuddy/
 ## 🧪 Installation
 
 ```
+
+SecBuddy is now available through an APT repository.  
+You can install it just like any official Linux package.
+METHOD 1
+### 🔧 Step 1: Add the SecBuddy APT Repository
+
+```bash
+echo "deb [trusted=yes] https://mryasharma.github.io/SecBuddy-Repo stable main" | sudo tee /etc/apt/sources.list.d/secbuddy.list
+sudo apt update
+sudo apt install secbuddy
+
+METHOD 2
 git clone https://github.com/mryasharma/SecBuddy.git
 cd SecBuddy
 pip install -r requirements.txt
